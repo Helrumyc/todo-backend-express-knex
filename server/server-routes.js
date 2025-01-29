@@ -2,6 +2,8 @@ const _ = require('lodash');
 const todos = require('./database/todo-queries.js');
 const users = require('./database/user-queries.js');
 const teams = require('./database/teams-queries.js');
+const assignees = require('./database/assignee-queries.js');
+
 
 /// Create functions
 function createToDo(req, data) {
@@ -43,6 +45,17 @@ function createTeam(req, data){
   }
 }
 
+function createAssingee(req, data){
+  const protocol = req.protocol, 
+  host = req.get('host');
+
+  return {
+    user_id: data.user_id,
+    todo_id: data.todo_id,
+    url: `${protocol}://${host}/${data.todo_id}/assignee/${data.user_id}`
+  }
+}
+
 /// Gets
 async function getAllTodos(req, res) {
   const allEntries = await todos.all();
@@ -59,6 +72,11 @@ async function getAllTeams(req, res){
   return res.send(allEntries.map( _.curry(createTeam)(req) ));
 }
 
+async function getAllAssignees(req, res){
+  const allEntries = await assignees.getAll(req.params.todo_id);
+  return res.send(allEntries.map( _.curry(createAssingee)(req) ));
+}
+
 async function getTodo(req, res) {
   const todo = await todos.get(req.params.id);
   return res.send(todo);
@@ -72,6 +90,11 @@ async function getUser(req, res) {
 async function getTeam(req, res) {
   const team = await teams.get(req.params.id);
   return res.send(team);
+}
+
+async function getAssignee(req, res) {
+  const assignee = await assignees.get(req.params.user_id, req.params.todo_id);
+  return res.send(assignee);
 }
 
 /// Posts
@@ -100,6 +123,11 @@ async function postTeam(req, res) {
   return res.send(createTeam(req, created));
 }
 
+async function postAssignee(req, res) {
+  const created = await assignees.create(req.body.user_id, req.body.todo_id);
+  return res.send(createAssingee(req, created));
+}
+
 /// Patches
 async function patchTodo(req, res) {
   const patched = await todos.update(req.params.id, req.body);
@@ -115,6 +143,7 @@ async function patchTeam(req, res) {
   const patched = await teams.update(req.params.id, req.body);
   return res.send(createTeam(req, patched));
 }
+
 
 /// Deletes
 async function deleteAllTodos(req, res) {
@@ -132,6 +161,11 @@ async function deleteAllTeams(req, res) {
   return res.send(deletedEntries.map( _.curry(createTeam)(req) ));
 }
 
+async function deleteAllAssignees(req, res) {
+  const deletedEntries = await assignees.clear();
+  return res.send(deletedEntries.map( _.curry(createAssingee)(req) ));
+}
+
 async function deleteTodo(req, res) {
   const deleted = await todos.delete(req.params.id);
   return res.send(createToDo(req, deleted));
@@ -145,6 +179,11 @@ async function deleteUser(req, res) {
 async function deleteTeam(req, res) {
   const deleted = await teams.delete(req.params.id);
   return res.send(createTeam(req, deleted));
+}
+
+async function deleteAssignee(req, res) {
+  const deleted = await assignees.delete(req.params.id);
+  return res.send(createAssingee(req, deleted));
 }
 
 /// Errors
@@ -165,21 +204,26 @@ const toExport = {
     getAllTodos: { method: getAllTodos, errorMessage: "Could not fetch all todos" },
     getAllUsers: { method: getAllUsers, errorMessage: "Could not fetch all users" },
     getAllTeams: { method: getAllTeams, errorMessage: "Could not fetch all teams" },
+    getAllAssignees: { method: getAllAssignees, errorMessage: "Could not fetch all assigness" },
     getTodo: { method: getTodo, errorMessage: "Could not fetch todo" },
     getUser: { method: getUser, errorMessage: "Could not fetch user" },
     getTeam: { method: getTeam, errorMessage: "Could not fetch team" },
+    getAssignee: { method: getAssignee, errorMessage: "Could not fetch assignee" },
     postTodo: { method: postTodo, errorMessage: "Could not post todo" },
     postUser: { method: postUser, errorMessage: "Could not post user" },
     postTeam: { method: postTeam, errorMessage: "Could not post team" },
+    postAssignee: { method: postAssignee, errorMessage: "Could not post assignee" },
     patchTodo: { method: patchTodo, errorMessage: "Could not patch todo" },
     patchUser: { method: patchUser, errorMessage: "Could not patch user" },
     patchTeam: { method: patchTeam, errorMessage: "Could not patch team" },
     deleteAllTodos: { method: deleteAllTodos, errorMessage: "Could not delete all todos" },
     deleteAllUsers: { method: deleteAllUsers, errorMessage: "Could not delete all users" },
     deleteAllTeams: { method: deleteAllTeams, errorMessage: "Could not delete all teams" },
+    deleteAllAssignees: { method: deleteAllAssignees, errorMessage: "Could not delete all assignees" },
     deleteTodo: { method: deleteTodo, errorMessage: "Could not delete todo" },
     deleteUser: { method: deleteUser, errorMessage: "Could not delete user" },
     deleteTeam: { method: deleteTeam, errorMessage: "Could not delete team" },
+    deleteAssignee: { method: deleteAssignee, errorMessage: "Could not delete assignee" },
 }
 
 for (let route in toExport) {
