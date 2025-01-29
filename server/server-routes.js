@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const todos = require('./database/todo-queries.js');
 
+/// Create functions
 function createToDo(req, data) {
   const protocol = req.protocol, 
     host = req.get('host'), 
@@ -14,6 +15,7 @@ function createToDo(req, data) {
   };
 }
 
+/// Gets
 async function getAllTodos(req, res) {
   const allEntries = await todos.all();
   return res.send(allEntries.map( _.curry(createToDo)(req) ));
@@ -24,16 +26,20 @@ async function getTodo(req, res) {
   return res.send(todo);
 }
 
+/// Posts
 async function postTodo(req, res) {
   const created = await todos.create(req.body.title, req.body.order);
   return res.send(createToDo(req, created));
 }
 
+
+/// Patches
 async function patchTodo(req, res) {
   const patched = await todos.update(req.params.id, req.body);
   return res.send(createToDo(req, patched));
 }
 
+/// Deletes
 async function deleteAllTodos(req, res) {
   const deletedEntries = await todos.clear();
   return res.send(deletedEntries.map( _.curry(createToDo)(req) ));
@@ -44,6 +50,7 @@ async function deleteTodo(req, res) {
   return res.send(createToDo(req, deleted));
 }
 
+/// Errors
 function addErrorReporting(func, message) {
     return async function(req, res) {
         try {
