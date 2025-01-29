@@ -12,6 +12,7 @@ function createToDo(req, data) {
   return {
     title: data.title,
     order: data.order,
+    team_id: data.team_id,
     completed: data.completed || false,
     url: `${protocol}://${host}/${id}`
   };
@@ -75,7 +76,12 @@ async function getTeam(req, res) {
 
 /// Posts
 async function postTodo(req, res) {
-  const created = await todos.create(req.body.title, req.body.order);
+  const created = await todos.create(
+    req.body.title,
+    req.body.order,
+    req.body.team_id,
+    req.body.note
+  );
   return res.send(createToDo(req, created));
 }
 
