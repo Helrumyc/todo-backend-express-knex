@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const todos = require('./database/todo-queries.js');
+const users = require('./database/user-queries.js');
 
 /// Create functions
 function createToDo(req, data) {
@@ -15,15 +16,39 @@ function createToDo(req, data) {
   };
 }
 
+function createUser(req, data){
+  const protocol = req.protocol, 
+  host = req.get('host'), 
+  id = data.id;
+
+  return {
+    user_name: data.user_name,
+    email: data.email,
+    first_name: data.first_name,
+    last_name: data.last_name,
+    url: `${protocol}://${host}/user/${id}`
+  }
+}
+
 /// Gets
 async function getAllTodos(req, res) {
   const allEntries = await todos.all();
   return res.send(allEntries.map( _.curry(createToDo)(req) ));
 }
 
+async function getAllUsers(req, res){
+  const allEntries = await users.all();
+  return res.send(allEntries.map( _.curry(createUser)(req) ));
+}
+
 async function getTodo(req, res) {
   const todo = await todos.get(req.params.id);
   return res.send(todo);
+}
+
+async function getUser(req, res) {
+  const user = await users.get(req.params.id);
+  return res.send(user);
 }
 
 /// Posts
@@ -32,11 +57,25 @@ async function postTodo(req, res) {
   return res.send(createToDo(req, created));
 }
 
+async function postUser(req, res) {
+  const created = await users.create(
+    req.body.user_name,
+    req.body.email,
+    req.body.first_name,
+    req.body.last_name
+  );
+  return res.send(createUser(req, created));
+}
 
 /// Patches
 async function patchTodo(req, res) {
   const patched = await todos.update(req.params.id, req.body);
   return res.send(createToDo(req, patched));
+}
+
+async function patchUser(req, res) {
+  const patched = await users.update(req.params.id, req.body);
+  return res.send(createUser(req, patched));
 }
 
 /// Deletes
@@ -45,9 +84,19 @@ async function deleteAllTodos(req, res) {
   return res.send(deletedEntries.map( _.curry(createToDo)(req) ));
 }
 
+async function deleteAllUsers(req, res) {
+  const deletedEntries = await users.clear();
+  return res.send(deletedEntries.map( _.curry(createUser)(req) ));
+}
+
 async function deleteTodo(req, res) {
   const deleted = await todos.delete(req.params.id);
   return res.send(createToDo(req, deleted));
+}
+
+async function deleteUser(req, res) {
+  const deleted = await users.delete(req.params.id);
+  return res.send(createUser(req, deleted));
 }
 
 /// Errors
@@ -59,18 +108,24 @@ function addErrorReporting(func, message) {
             console.log(`${message} caused by: ${err}`);
 
             // Not always 500, but for simplicity's sake.
-            res.status(500).send(`Opps! ${message}.`);
+            res.status(500).send(`Oops! ${message}.`);
         } 
     }
 }
 
 const toExport = {
     getAllTodos: { method: getAllTodos, errorMessage: "Could not fetch all todos" },
+    getAllUsers: { method: getAllUsers, errorMessage: "Could not fetch all users" },
     getTodo: { method: getTodo, errorMessage: "Could not fetch todo" },
+    getUser: { method: getUser, errorMessage: "Could not fetch user" },
     postTodo: { method: postTodo, errorMessage: "Could not post todo" },
+    postUser: { method: postUser, errorMessage: "Could not post user" },
     patchTodo: { method: patchTodo, errorMessage: "Could not patch todo" },
+    patchUser: { method: patchUser, errorMessage: "Could not patch user" },
     deleteAllTodos: { method: deleteAllTodos, errorMessage: "Could not delete all todos" },
-    deleteTodo: { method: deleteTodo, errorMessage: "Could not delete todo" }
+    deleteAllUsers: { method: deleteAllUsers, errorMessage: "Could not delete all users" },
+    deleteTodo: { method: deleteTodo, errorMessage: "Could not delete todo" },
+    deleteUser: { method: deleteUser, errorMessage: "Could not delete user" }
 }
 
 for (let route in toExport) {
